@@ -1,3 +1,4 @@
+import { VoiceInput } from "../components/VoiceInput";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -50,6 +51,7 @@ export function Advisor({
     () => Number(localStorage.getItem("juniper-conversation")) || null,
   );
   const [draft, setDraft] = useState("");
+  const [voiceBusy,setVoiceBusy]=useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
  const [expandedActions,setExpandedActions]=useState<number[]>([]);
   const [showSnapshot, setShowSnapshot] = useState(false);
@@ -90,7 +92,7 @@ export function Advisor({
       qc.invalidateQueries({ queryKey: ["messages"] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
     },
-    onError: (e) => setError(e.message),
+    onError: (e) => {setError(e.message);},
   });
   const simulate = useMutation({
     mutationFn: (s: Scenario) => api<Simulation>("/simulations", "POST", s),
@@ -98,7 +100,7 @@ export function Advisor({
     onError: (e) => setError(e.message),
   });
   function submit(text = draft) {
-    if (!text.trim() || send.isPending) return;
+    if (!text.trim() || send.isPending || voiceBusy) return;
     setError("");
     setDraft("");
     send.mutate(text);
@@ -146,6 +148,8 @@ export function Advisor({
             <button
               className="icon-button"
               aria-label="Conversation history"
+              title="Past conversations"
+              disabled={send.isPending||voiceBusy}
               onClick={() => setHistoryOpen(!historyOpen)}
             >
               <History size={18} />
@@ -153,6 +157,8 @@ export function Advisor({
             <button
               className="icon-button"
               aria-label="New conversation"
+              title="New conversation"
+              disabled={send.isPending||voiceBusy}
               onClick={() => {
                 setConversation(null);
                 localStorage.removeItem("juniper-conversation");
@@ -171,6 +177,7 @@ export function Advisor({
                 <button
                   key={c.id}
                   onClick={() => {
+                    setScenario(null);setError("");
                     setConversation(c.id);
                     localStorage.setItem("juniper-conversation", String(c.id));
                     setHistoryOpen(false);
@@ -191,7 +198,7 @@ export function Advisor({
                 <Sprout size={35} strokeWidth={1.5} />
               </div>
 
-              <h1>How can I help?</h1>
+              <h1>A little clarity for your kitchen.</h1>
               <p>
                 Ask about your costs, team, or menu. I’ll use your restaurant’s
                 information to help.
@@ -270,10 +277,10 @@ export function Advisor({
                 </article>
               ))}
               {send.isPending && (
-                <div className="thinking">
+                <div className="pending-exchange"><div className="pending-question">{send.variables}</div><div className="thinking" role="status">
                   <LoaderCircle size={17} className="spin" /> Reading your
                   records and checking the numbers…
-                </div>
+                </div></div>
               )}
               <div ref={bottom} />
             </div>
@@ -316,21 +323,23 @@ export function Advisor({
               aria-label="Message your advisor"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              readOnly={voiceBusy}
               placeholder="Ask anything about your restaurant…"
               rows={2}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   submit();
                 }
               }}
             />
             <div className="composer-bottom">
+              <VoiceInput value={draft} onChange={setDraft} disabled={send.isPending} onBusyChange={setVoiceBusy}/>
               <span>
                 <Sparkles size={14} /> Connected to your restaurant
               </span>
               <Button
-                disabled={!draft.trim() || send.isPending}
+                disabled={!draft.trim() || send.isPending || voiceBusy}
                 aria-label="Send message"
                 type="submit"
               >

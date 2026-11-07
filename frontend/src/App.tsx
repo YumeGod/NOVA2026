@@ -35,6 +35,7 @@ export default function App() {
   ] as const;
   return (
     <div className="app-shell simple-app">
+      {open&&<button className="navigation-scrim" aria-label="Close navigation" onClick={()=>setOpen(false)}/>}
       <aside className={"sidebar " + (open ? "mobile-open" : "")}>
         <Link to="/advisor" className="brand">
           <div className="brand-icon">

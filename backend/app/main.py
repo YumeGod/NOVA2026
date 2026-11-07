@@ -19,3 +19,5 @@ app.include_router(router)
 async def unexpected(request:Request,exc:Exception):
     logging.error('Unhandled backend error: %s',type(exc).__name__)
     return JSONResponse(status_code=500,content={'detail':'Something went wrong. Please retry; no incomplete transaction was saved.'})
+from app.api.voice import router as voice_router
+app.include_router(voice_router)

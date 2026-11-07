@@ -214,3 +214,7 @@ Verification includes **31 passing backend tests**, a successful TypeScript/Vite
 ## Simplified interface
 
 The app opens directly into the advisor. There are three navigation choices: **Ask Juniper**, **My restaurant**, and **Try a change**. Menu, ingredients, team and restaurant details share one editing area. The weekly summary, detailed analytics, skill coverage, additional advisor actions, and previous comparisons are available on demand. The extra welcome screen, persistent insights sidebar and duplicate guided prompts have been removed. AI explanations are instructed to lead with a direct answer and at most two recommendations. Saved business data and deterministic calculations are unchanged.
+
+## Voice input
+
+Tap the microphone, speak, and tap stop (45-second maximum). Juniper records audio with browser noise suppression, converts it to mono WAV, and sends it through the backend to OpenRouter for transcription. The model receives menu, staff, and ingredient names as vocabulary hints. Review and edit the transcript before sending. Audio is not persisted by Juniper; it is transmitted to OpenRouter and its model provider. Configure `OPENROUTER_AUDIO_MODEL` to change the audio-capable model (default `google/gemini-2.5-flash`). Use localhost or HTTPS and allow microphone permission. Actual microphone accuracy requires testing with the user's voice and environment.
